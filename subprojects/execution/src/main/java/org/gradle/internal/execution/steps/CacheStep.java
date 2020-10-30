@@ -155,8 +155,6 @@ public class CacheStep implements Step<IncrementalChangesContext, CurrentSnapsho
             result.getFinalOutputs());
 
         try {
-//            checkCacheContainsAllFiles(cacheKey, result);
-
             buildCache.store(commandFactory.createStore(cacheKey, work, result.getFinalOutputs(), result.getOriginMetadata().getExecutionTime()));
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Stored cache entry for {} with cache key {}",
@@ -168,33 +166,6 @@ public class CacheStep implements Step<IncrementalChangesContext, CurrentSnapsho
                     work.getDisplayName()),
                 e);
         }
-    }
-
-    private static void checkCacheContainsAllFiles(BuildCacheKey cacheKey, CurrentSnapshotResult result) {
-        result.getFinalOutputs().forEach((key, fileCollectionFingerprint) -> {
-            Set<String> expectedFingerprints = new HashSet<>();
-            fileCollectionFingerprint.getRootPaths().stream().map(Paths::get).forEach(rootPath -> {
-                expectedFingerprints.add(rootPath.toString());
-                try {
-                    if (!Files.exists(rootPath)) {
-                        throw new RuntimeException(String.format("Root path %s for cache key %s does not exist", rootPath, cacheKey));
-                    }
-                    if (Files.isDirectory(rootPath)) {
-                        Files.list(rootPath).forEach(file -> expectedFingerprints.add(file.toString()));
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException("Error listing files for " + rootPath, e);
-                }
-            });
-
-            Set<String> givenFingerprints = fileCollectionFingerprint.getFingerprints().keySet();
-            Preconditions.checkState(
-                givenFingerprints.equals(expectedFingerprints),
-                "Cache mismatch for key %s:\nCurrentSnapshotResult:%s\nFilesystem:%s",
-                cacheKey,
-                Joiner.on("\n").join(givenFingerprints.stream().map(s -> "    " + s).collect(Collectors.toList())),
-                Joiner.on("\n").join(expectedFingerprints.stream().map(s -> "    " + s).collect(Collectors.toList())));
-        });
     }
 
     private CurrentSnapshotResult executeWithoutCache(IncrementalChangesContext context) {
