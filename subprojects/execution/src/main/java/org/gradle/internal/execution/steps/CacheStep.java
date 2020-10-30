@@ -16,6 +16,8 @@
 
 package org.gradle.internal.execution.steps;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import org.gradle.caching.BuildCacheKey;
@@ -38,7 +40,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CacheStep implements Step<IncrementalChangesContext, CurrentSnapshotResult> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CacheStep.class);
@@ -75,9 +82,9 @@ public class CacheStep implements Step<IncrementalChangesContext, CurrentSnapsho
     private CurrentSnapshotResult executeWithCache(IncrementalChangesContext context, BuildCacheKey cacheKey) {
         UnitOfWork work = context.getWork();
         return Try.ofFailable(() -> work.isAllowedToLoadFromCache()
-                ? buildCache.load(commandFactory.createLoad(cacheKey, work))
-                : Optional.<LoadMetadata>empty()
-            )
+            ? buildCache.load(commandFactory.createLoad(cacheKey, work))
+            : Optional.<LoadMetadata>empty()
+        )
             .map(successfulLoad -> successfulLoad
                 .map(cacheHit -> {
                     if (LOGGER.isInfoEnabled()) {
@@ -141,7 +148,15 @@ public class CacheStep implements Step<IncrementalChangesContext, CurrentSnapsho
     }
 
     private void store(UnitOfWork work, BuildCacheKey cacheKey, CurrentSnapshotResult result) {
+        LOGGER.info(
+            "Attempting to store cache entry for {} with cache key {} and final outputs {}",
+            work.getDisplayName(),
+            cacheKey.getHashCode(),
+            result.getFinalOutputs());
+
         try {
+//            checkCacheContainsAllFiles(cacheKey, result);
+
             buildCache.store(commandFactory.createStore(cacheKey, work, result.getFinalOutputs(), result.getOriginMetadata().getExecutionTime()));
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Stored cache entry for {} with cache key {}",
@@ -153,6 +168,33 @@ public class CacheStep implements Step<IncrementalChangesContext, CurrentSnapsho
                     work.getDisplayName()),
                 e);
         }
+    }
+
+    private static void checkCacheContainsAllFiles(BuildCacheKey cacheKey, CurrentSnapshotResult result) {
+        result.getFinalOutputs().forEach((key, fileCollectionFingerprint) -> {
+            Set<String> expectedFingerprints = new HashSet<>();
+            fileCollectionFingerprint.getRootPaths().stream().map(Paths::get).forEach(rootPath -> {
+                expectedFingerprints.add(rootPath.toString());
+                try {
+                    if (!Files.exists(rootPath)) {
+                        throw new RuntimeException(String.format("Root path %s for cache key %s does not exist", rootPath, cacheKey));
+                    }
+                    if (Files.isDirectory(rootPath)) {
+                        Files.list(rootPath).forEach(file -> expectedFingerprints.add(file.toString()));
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException("Error listing files for " + rootPath, e);
+                }
+            });
+
+            Set<String> givenFingerprints = fileCollectionFingerprint.getFingerprints().keySet();
+            Preconditions.checkState(
+                givenFingerprints.equals(expectedFingerprints),
+                "Cache mismatch for key %s:\nCurrentSnapshotResult:%s\nFilesystem:%s",
+                cacheKey,
+                Joiner.on("\n").join(givenFingerprints.stream().map(s -> "    " + s).collect(Collectors.toList())),
+                Joiner.on("\n").join(expectedFingerprints.stream().map(s -> "    " + s).collect(Collectors.toList())));
+        });
     }
 
     private CurrentSnapshotResult executeWithoutCache(IncrementalChangesContext context) {
