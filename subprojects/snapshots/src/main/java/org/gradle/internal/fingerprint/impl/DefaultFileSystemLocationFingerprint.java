@@ -32,7 +32,7 @@ public class DefaultFileSystemLocationFingerprint implements FileSystemLocationF
     }
 
     public DefaultFileSystemLocationFingerprint(String normalizedPath, CompleteFileSystemLocationSnapshot snapshot) {
-        this(normalizedPath, snapshot.getType(), snapshot.getHash());
+        this(normalizedPath, snapshot.getType().asFileType(), snapshot.getHash());
     }
 
     private static HashCode hashForType(FileType fileType, HashCode hash) {

@@ -22,14 +22,14 @@ import com.google.common.collect.Iterables;
 import org.gradle.api.internal.changedetection.state.DefaultRegularFileSnapshotContext;
 import org.gradle.api.internal.changedetection.state.IgnoringResourceHasher;
 import org.gradle.api.internal.changedetection.state.ManifestFileZipEntryHasher;
-import org.gradle.api.internal.changedetection.state.RegularFileSnapshotContext;
+import org.gradle.api.internal.changedetection.state.MetaInfAwareClasspathResourceHasher;
 import org.gradle.api.internal.changedetection.state.PropertiesFileAwareClasspathResourceHasher;
+import org.gradle.api.internal.changedetection.state.RegularFileSnapshotContext;
 import org.gradle.api.internal.changedetection.state.ResourceEntryFilter;
 import org.gradle.api.internal.changedetection.state.ResourceFilter;
 import org.gradle.api.internal.changedetection.state.ResourceHasher;
 import org.gradle.api.internal.changedetection.state.ResourceSnapshotterCacheService;
 import org.gradle.api.internal.changedetection.state.RuntimeClasspathResourceHasher;
-import org.gradle.api.internal.changedetection.state.MetaInfAwareClasspathResourceHasher;
 import org.gradle.api.internal.changedetection.state.ZipHasher;
 import org.gradle.internal.file.FileType;
 import org.gradle.internal.fingerprint.FileSystemLocationFingerprint;
@@ -232,7 +232,7 @@ public class ClasspathFingerprintingStrategy extends AbstractFingerprintingStrat
         public void visit(CompleteFileSystemLocationSnapshot fileSnapshot, HashCode normalizedContentHash) {
             String absolutePath = fileSnapshot.getAbsolutePath();
             if (processedEntries.add(absolutePath)) {
-                FileSystemLocationFingerprint fingerprint = relativePathStringTracker.isRoot() ? IgnoredPathFileSystemLocationFingerprint.create(fileSnapshot.getType(), normalizedContentHash) : createFileFingerprint(fileSnapshot, normalizedContentHash);
+                FileSystemLocationFingerprint fingerprint = relativePathStringTracker.isRoot() ? IgnoredPathFileSystemLocationFingerprint.create(fileSnapshot.getType().asFileType(), normalizedContentHash) : createFileFingerprint(fileSnapshot, normalizedContentHash);
                 builder.put(
                     absolutePath,
                     fingerprint

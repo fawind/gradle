@@ -18,7 +18,6 @@ package org.gradle.internal.execution.impl;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.gradle.internal.file.FileType;
 import org.gradle.internal.fingerprint.FileCollectionFingerprint;
 import org.gradle.internal.fingerprint.FileSystemLocationFingerprint;
 import org.gradle.internal.snapshot.CompleteDirectorySnapshot;
@@ -26,6 +25,7 @@ import org.gradle.internal.snapshot.CompleteFileSystemLocationSnapshot;
 import org.gradle.internal.snapshot.FileSystemSnapshot;
 import org.gradle.internal.snapshot.FileSystemSnapshotVisitor;
 import org.gradle.internal.snapshot.MerkleDirectorySnapshotBuilder;
+import org.gradle.internal.snapshot.SnapshotType;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -45,7 +45,7 @@ public class OutputFilterUtil {
     public static ImmutableList<FileSystemSnapshot> filterOutputSnapshotBeforeExecution(FileCollectionFingerprint afterLastExecutionFingerprint, FileSystemSnapshot beforeExecutionOutputSnapshot) {
         Map<String, FileSystemLocationFingerprint> fingerprints = afterLastExecutionFingerprint.getFingerprints();
         SnapshotFilteringVisitor filteringVisitor = new SnapshotFilteringVisitor((snapshot, isRoot) ->
-            (!isRoot || snapshot.getType() != FileType.Missing)
+            (!isRoot || snapshot.getType() != SnapshotType.Missing)
                 && fingerprints.containsKey(snapshot.getAbsolutePath())
         );
         beforeExecutionOutputSnapshot.accept(filteringVisitor);

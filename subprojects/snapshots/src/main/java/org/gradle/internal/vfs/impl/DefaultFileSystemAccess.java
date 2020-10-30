@@ -29,6 +29,7 @@ import org.gradle.internal.snapshot.CompleteFileSystemLocationSnapshot;
 import org.gradle.internal.snapshot.FileSystemSnapshot;
 import org.gradle.internal.snapshot.MissingFileSnapshot;
 import org.gradle.internal.snapshot.RegularFileSnapshot;
+import org.gradle.internal.snapshot.SnapshotType;
 import org.gradle.internal.snapshot.SnapshottingFilter;
 import org.gradle.internal.snapshot.impl.DirectorySnapshotter;
 import org.gradle.internal.snapshot.impl.DirectorySnapshotterStatistics;
@@ -87,7 +88,7 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
     public <T> Optional<T> readRegularFileContentHash(String location, Function<HashCode, T> visitor) {
         return virtualFileSystem.getMetadata(location)
             .<Optional<HashCode>>flatMap(snapshot -> {
-                if (snapshot.getType() != FileType.RegularFile) {
+                if (snapshot.getType() != SnapshotType.RegularFile) {
                     return Optional.of(Optional.empty());
                 }
                 if (snapshot instanceof CompleteFileSystemLocationSnapshot) {
@@ -130,7 +131,7 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
                 snapshot -> FileSystemSnapshotFilter.filterSnapshot(filter.getAsSnapshotPredicate(), snapshot),
                 () -> {
                     CompleteFileSystemLocationSnapshot snapshot = snapshot(location, filter);
-                    return snapshot.getType() == FileType.Directory
+                    return snapshot.getType() == SnapshotType.Directory
                         // Directory snapshots have been filtered while walking the file system
                         ? snapshot
                         : FileSystemSnapshotFilter.filterSnapshot(filter.getAsSnapshotPredicate(), snapshot);

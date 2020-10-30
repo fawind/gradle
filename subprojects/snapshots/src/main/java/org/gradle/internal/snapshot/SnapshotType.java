@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,24 @@
 
 package org.gradle.internal.snapshot;
 
-/**
- * A snapshot where we know the metadata (i.e. the type).
- */
-public interface MetadataSnapshot {
+import org.gradle.internal.file.FileType;
 
-    MetadataSnapshot DIRECTORY = new MetadataSnapshot() {
-        @Override
-        public SnapshotType getType() {
-            return SnapshotType.Directory;
-        }
+public enum SnapshotType {
+    RegularFile(FileType.RegularFile),
+    Directory(FileType.Directory),
+    Missing(FileType.Missing);
 
-        @Override
-        public FileSystemNode asFileSystemNode() {
-            return PartialDirectorySnapshot.withoutKnownChildren();
-        }
-    };
+    private final FileType fileType;
 
-    /**
-     * The type of the snapshot.
-     */
-    SnapshotType getType();
+    SnapshotType(FileType fileType) {
+        this.fileType = fileType;
+    }
 
-    FileSystemNode asFileSystemNode();
+    public boolean matches(FileType fileType) {
+        return fileType.equals(this.fileType);
+    }
+
+    public FileType asFileType() {
+        return fileType;
+    }
 }

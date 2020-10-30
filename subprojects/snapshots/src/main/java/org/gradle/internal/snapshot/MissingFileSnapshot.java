@@ -17,7 +17,6 @@
 package org.gradle.internal.snapshot;
 
 import org.gradle.internal.file.FileMetadata.AccessType;
-import org.gradle.internal.file.FileType;
 import org.gradle.internal.hash.HashCode;
 import org.gradle.internal.hash.Hashing;
 
@@ -38,8 +37,8 @@ public class MissingFileSnapshot extends AbstractCompleteFileSystemLocationSnaps
     }
 
     @Override
-    public FileType getType() {
-        return FileType.Missing;
+    public SnapshotType getType() {
+        return SnapshotType.Missing;
     }
 
     @Override

@@ -18,7 +18,6 @@ package org.gradle.internal.snapshot;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.gradle.internal.file.FileMetadata.AccessType;
-import org.gradle.internal.file.FileType;
 import org.gradle.internal.hash.HashCode;
 
 import java.util.List;
@@ -58,8 +57,8 @@ public class CompleteDirectorySnapshot extends AbstractCompleteFileSystemLocatio
     }
 
     @Override
-    public FileType getType() {
-        return FileType.Directory;
+    public SnapshotType getType() {
+        return SnapshotType.Directory;
     }
 
     @Override

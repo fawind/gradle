@@ -17,7 +17,6 @@
 package org.gradle.internal.fingerprint.overlap.impl;
 
 import com.google.common.collect.ImmutableSortedMap;
-import org.gradle.internal.file.FileType;
 import org.gradle.internal.fingerprint.FileCollectionFingerprint;
 import org.gradle.internal.fingerprint.FileSystemLocationFingerprint;
 import org.gradle.internal.fingerprint.overlap.OverlappingOutputDetector;
@@ -27,6 +26,7 @@ import org.gradle.internal.snapshot.CompleteDirectorySnapshot;
 import org.gradle.internal.snapshot.CompleteFileSystemLocationSnapshot;
 import org.gradle.internal.snapshot.FileSystemSnapshot;
 import org.gradle.internal.snapshot.FileSystemSnapshotVisitor;
+import org.gradle.internal.snapshot.SnapshotType;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -113,11 +113,11 @@ public class DefaultOverlappingOutputDetector implements OverlappingOutputDetect
             FileSystemLocationFingerprint previousFingerprint = previousFingerprints.get(path);
             HashCode previousContentHash = previousFingerprint == null ? null : previousFingerprint.getNormalizedContentHash();
             // Missing files can be ignored
-            if (!isRoot() || beforeSnapshot.getType() != FileType.Missing) {
+            if (!isRoot() || beforeSnapshot.getType() != SnapshotType.Missing) {
                 if (createdSincePreviousExecution(previousContentHash)
-                    || (beforeSnapshot.getType() != previousFingerprint.getType())
+                    || (beforeSnapshot.getType().matches(previousFingerprint.getType()))
                     // The fingerprint hashes for non-regular files are slightly different to the snapshot hashes, we only need to compare them for regular files
-                    || (beforeSnapshot.getType() == FileType.RegularFile && changedSincePreviousExecution(contentHash, previousContentHash))) {
+                    || (beforeSnapshot.getType() == SnapshotType.RegularFile && changedSincePreviousExecution(contentHash, previousContentHash))) {
                     return path;
                 }
             }

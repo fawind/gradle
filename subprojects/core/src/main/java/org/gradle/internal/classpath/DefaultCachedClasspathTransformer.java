@@ -26,9 +26,9 @@ import org.gradle.internal.concurrent.ExecutorFactory;
 import org.gradle.internal.concurrent.ManagedExecutor;
 import org.gradle.internal.file.FileAccessTimeJournal;
 import org.gradle.internal.file.FileAccessTracker;
-import org.gradle.internal.file.FileType;
 import org.gradle.internal.hash.HashCode;
 import org.gradle.internal.snapshot.CompleteFileSystemLocationSnapshot;
+import org.gradle.internal.snapshot.SnapshotType;
 import org.gradle.internal.vfs.FileSystemAccess;
 
 import java.io.Closeable;
@@ -156,7 +156,7 @@ public class DefaultCachedClasspathTransformer implements CachedClasspathTransfo
     private CacheOperation cached(File original, ClasspathFileTransformer transformer, Set<HashCode> seen) {
         CompleteFileSystemLocationSnapshot snapshot = fileSystemAccess.read(original.getAbsolutePath(), s -> s);
         HashCode contentHash = snapshot.getHash();
-        if (snapshot.getType() == FileType.Missing) {
+        if (snapshot.getType() == SnapshotType.Missing) {
             return new EmptyOperation();
         }
         if (shouldUseFromCache(original)) {

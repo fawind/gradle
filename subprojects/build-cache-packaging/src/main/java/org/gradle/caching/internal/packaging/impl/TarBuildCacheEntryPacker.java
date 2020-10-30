@@ -32,7 +32,6 @@ import org.gradle.caching.internal.origin.OriginReader;
 import org.gradle.caching.internal.origin.OriginWriter;
 import org.gradle.caching.internal.packaging.BuildCacheEntryPacker;
 import org.gradle.internal.file.FileMetadata.AccessType;
-import org.gradle.internal.file.FileType;
 import org.gradle.internal.file.TreeType;
 import org.gradle.internal.file.impl.DefaultFileMetadata;
 import org.gradle.internal.hash.HashCode;
@@ -44,6 +43,7 @@ import org.gradle.internal.snapshot.FileSystemSnapshotVisitor;
 import org.gradle.internal.snapshot.MerkleDirectorySnapshotBuilder;
 import org.gradle.internal.snapshot.RegularFileSnapshot;
 import org.gradle.internal.snapshot.RelativePathStringTracker;
+import org.gradle.internal.snapshot.SnapshotType;
 
 import javax.annotation.Nullable;
 import java.io.BufferedOutputStream;
@@ -365,7 +365,7 @@ public class TarBuildCacheEntryPacker implements BuildCacheEntryPacker {
             boolean isRoot = relativePathStringTracker.isRoot();
             relativePathStringTracker.enter(fileSnapshot);
             String targetPath = getTargetPath(isRoot);
-            if (fileSnapshot.getType() == FileType.Missing) {
+            if (fileSnapshot.getType() == SnapshotType.Missing) {
                 if (!isRoot) {
                     throw new RuntimeException(String.format("Couldn't read content of file '%s'", fileSnapshot.getAbsolutePath()));
                 }
@@ -397,12 +397,12 @@ public class TarBuildCacheEntryPacker implements BuildCacheEntryPacker {
             if (root) {
                 switch (type) {
                     case DIRECTORY:
-                        if (snapshot.getType() != FileType.Directory) {
+                        if (snapshot.getType() != SnapshotType.Directory) {
                             throw new IllegalArgumentException(String.format("Expected '%s' to be a directory", snapshot.getAbsolutePath()));
                         }
                         break;
                     case FILE:
-                        if (snapshot.getType() != FileType.RegularFile) {
+                        if (snapshot.getType() != SnapshotType.RegularFile) {
                             throw new IllegalArgumentException(String.format("Expected '%s' to be a file", snapshot.getAbsolutePath()));
                         }
                         break;

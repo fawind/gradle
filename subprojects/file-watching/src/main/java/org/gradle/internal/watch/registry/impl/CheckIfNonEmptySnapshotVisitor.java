@@ -16,9 +16,9 @@
 
 package org.gradle.internal.watch.registry.impl;
 
-import org.gradle.internal.file.FileType;
 import org.gradle.internal.snapshot.CompleteFileSystemLocationSnapshot;
 import org.gradle.internal.snapshot.SnapshotHierarchy;
+import org.gradle.internal.snapshot.SnapshotType;
 
 public class CheckIfNonEmptySnapshotVisitor implements SnapshotHierarchy.SnapshotVisitor {
     private final WatchableHierarchies watchableHierarchies;
@@ -33,7 +33,7 @@ public class CheckIfNonEmptySnapshotVisitor implements SnapshotHierarchy.Snapsho
     public void visitSnapshotRoot(CompleteFileSystemLocationSnapshot rootSnapshot) {
         if (!watchableHierarchies.ignoredForWatching(rootSnapshot)) {
             empty = false;
-            if (rootSnapshot.getType() != FileType.Missing) {
+            if (rootSnapshot.getType() != SnapshotType.Missing) {
                 onlyMissing = false;
             }
         }

@@ -63,7 +63,7 @@ public class IgnoredPathFingerprintingStrategy extends AbstractFingerprintingStr
                 public void visitFile(CompleteFileSystemLocationSnapshot fileSnapshot) {
                     String absolutePath = fileSnapshot.getAbsolutePath();
                     if (processedEntries.add(absolutePath)) {
-                        builder.put(absolutePath, IgnoredPathFileSystemLocationFingerprint.create(fileSnapshot.getType(), fileSnapshot.getHash()));
+                        builder.put(absolutePath, IgnoredPathFileSystemLocationFingerprint.create(fileSnapshot.getType().asFileType(), fileSnapshot.getHash()));
                     }
                 }
 

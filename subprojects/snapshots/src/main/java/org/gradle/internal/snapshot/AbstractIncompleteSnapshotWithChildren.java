@@ -16,8 +16,6 @@
 
 package org.gradle.internal.snapshot;
 
-import org.gradle.internal.file.FileType;
-
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
@@ -108,7 +106,7 @@ public abstract class AbstractIncompleteSnapshotWithChildren implements FileSyst
             }
 
             private boolean isRegularFileOrDirectory(MetadataSnapshot metadataSnapshot) {
-                return metadataSnapshot.getType() != FileType.Missing;
+                return metadataSnapshot.getType() != SnapshotType.Missing;
             }
         });
         if (newChildren == children) {

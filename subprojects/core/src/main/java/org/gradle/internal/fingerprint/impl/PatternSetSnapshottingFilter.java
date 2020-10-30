@@ -23,9 +23,9 @@ import org.gradle.api.file.RelativePath;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.util.PatternSet;
 import org.gradle.internal.UncheckedException;
-import org.gradle.internal.file.FileType;
 import org.gradle.internal.file.Stat;
 import org.gradle.internal.snapshot.CompleteFileSystemLocationSnapshot;
+import org.gradle.internal.snapshot.SnapshotType;
 import org.gradle.internal.snapshot.SnapshottingFilter;
 import org.gradle.util.GFileUtils;
 
@@ -95,7 +95,7 @@ public class PatternSetSnapshottingFilter implements SnapshottingFilter {
 
         @Override
         public boolean isDirectory() {
-            return snapshot.getType() == FileType.Directory;
+            return snapshot.getType() == SnapshotType.Directory;
         }
 
         @Override

@@ -18,11 +18,11 @@ package org.gradle.internal.watch.vfs.impl;
 
 import com.google.common.collect.EnumMultiset;
 import com.google.common.collect.Multiset;
-import org.gradle.internal.file.FileType;
 import org.gradle.internal.snapshot.CompleteDirectorySnapshot;
 import org.gradle.internal.snapshot.CompleteFileSystemLocationSnapshot;
 import org.gradle.internal.snapshot.FileSystemSnapshotVisitor;
 import org.gradle.internal.snapshot.SnapshotHierarchy;
+import org.gradle.internal.snapshot.SnapshotType;
 import org.gradle.internal.watch.registry.FileWatcherRegistry;
 import org.gradle.internal.watch.vfs.FileSystemWatchingStatistics;
 
@@ -50,21 +50,21 @@ public class DefaultFileSystemWatchingStatistics implements FileSystemWatchingSt
 
     @Override
     public int getRetainedRegularFiles() {
-        return vfsStatistics.getRetained(FileType.RegularFile);
+        return vfsStatistics.getRetained(SnapshotType.RegularFile);
     }
 
     @Override
     public int getRetainedDirectories() {
-        return vfsStatistics.getRetained(FileType.Directory);
+        return vfsStatistics.getRetained(SnapshotType.Directory);
     }
 
     @Override
     public int getRetainedMissingFiles() {
-        return vfsStatistics.getRetained(FileType.Missing);
+        return vfsStatistics.getRetained(SnapshotType.Missing);
     }
 
     private static VirtualFileSystemStatistics getStatistics(SnapshotHierarchy root) {
-        EnumMultiset<FileType> retained = EnumMultiset.create(FileType.class);
+        EnumMultiset<SnapshotType> retained = EnumMultiset.create(SnapshotType.class);
         root.visitSnapshotRoots(snapshot -> snapshot.accept(new FileSystemSnapshotVisitor() {
             @Override
             public boolean preVisitDirectory(CompleteDirectorySnapshot directorySnapshot) {
@@ -85,14 +85,14 @@ public class DefaultFileSystemWatchingStatistics implements FileSystemWatchingSt
     }
 
     private static class VirtualFileSystemStatistics {
-        private final Multiset<FileType> retained;
+        private final Multiset<SnapshotType> retained;
 
-        public VirtualFileSystemStatistics(Multiset<FileType> retained) {
+        public VirtualFileSystemStatistics(Multiset<SnapshotType> retained) {
             this.retained = retained;
         }
 
-        public int getRetained(FileType fileType) {
-            return retained.count(fileType);
+        public int getRetained(SnapshotType type) {
+            return retained.count(type);
         }
     }
 }

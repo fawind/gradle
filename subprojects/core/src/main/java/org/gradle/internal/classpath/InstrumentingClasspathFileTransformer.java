@@ -23,11 +23,11 @@ import org.gradle.api.internal.file.archive.ZipInput;
 import org.gradle.api.internal.file.archive.impl.FileZipInput;
 import org.gradle.internal.Pair;
 import org.gradle.internal.file.FileException;
-import org.gradle.internal.file.FileType;
 import org.gradle.internal.hash.HashCode;
 import org.gradle.internal.hash.Hasher;
 import org.gradle.internal.hash.Hashing;
 import org.gradle.internal.snapshot.CompleteFileSystemLocationSnapshot;
+import org.gradle.internal.snapshot.SnapshotType;
 import org.gradle.util.GFileUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -57,7 +57,7 @@ class InstrumentingClasspathFileTransformer implements ClasspathFileTransformer 
 
     @Override
     public File transform(File source, CompleteFileSystemLocationSnapshot sourceSnapshot, File cacheDir) {
-        String name = sourceSnapshot.getType() == FileType.Directory ? source.getName() + ".jar" : source.getName();
+        String name = sourceSnapshot.getType() == SnapshotType.Directory ? source.getName() + ".jar" : source.getName();
         Hasher hasher = Hashing.defaultFunction().newHasher();
         hasher.putHash(configHash);
         // TODO - apply runtime classpath normalization?

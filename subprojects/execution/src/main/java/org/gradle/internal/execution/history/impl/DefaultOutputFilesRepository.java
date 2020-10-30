@@ -21,11 +21,11 @@ import org.gradle.cache.PersistentIndexedCache;
 import org.gradle.cache.PersistentIndexedCacheParameters;
 import org.gradle.cache.internal.InMemoryCacheDecoratorFactory;
 import org.gradle.internal.execution.history.OutputFilesRepository;
-import org.gradle.internal.file.FileType;
 import org.gradle.internal.snapshot.CompleteDirectorySnapshot;
 import org.gradle.internal.snapshot.CompleteFileSystemLocationSnapshot;
 import org.gradle.internal.snapshot.FileSystemSnapshot;
 import org.gradle.internal.snapshot.FileSystemSnapshotVisitor;
+import org.gradle.internal.snapshot.SnapshotType;
 
 import java.io.Closeable;
 import java.io.File;
@@ -74,7 +74,7 @@ public class DefaultOutputFilesRepository implements OutputFilesRepository, Clos
 
                 @Override
                 public void visitFile(CompleteFileSystemLocationSnapshot fileSnapshot) {
-                    if (fileSnapshot.getType() == FileType.RegularFile) {
+                    if (fileSnapshot.getType() == SnapshotType.RegularFile) {
                         recordOutputSnapshot(fileSnapshot);
                     }
                 }
