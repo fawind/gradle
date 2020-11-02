@@ -171,14 +171,17 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
     }
 
     private CompleteFileSystemLocationSnapshot readLocation(String location) {
-        Optional<CompleteFileSystemLocationSnapshot> snapshot = virtualFileSystem.getRoot().getSnapshot(location);
+        Optional<CompleteFileSystemLocationSnapshot> snapshot = producingSnapshots.guardByKey(location, () -> virtualFileSystem.getRoot().getSnapshot(location));
+
         if (location.contains("/var/conf")) {
             LOGGER.info(">>> DefaultFileSystemAccess#readLocation location {} is present: {}", location, snapshot.isPresent());
 
             if (snapshot.isPresent()) {
                 Set<String> oldFiles = CollectingVisitor.getFiles(snapshot.get());
-                CompleteFileSystemLocationSnapshot newSnapshot = snapshot(location);
+
+                CompleteFileSystemLocationSnapshot newSnapshot = producingSnapshots.guardByKey(location, () -> snapshot(location));
                 Set<String> newFiles = CollectingVisitor.getFiles(newSnapshot);
+
                 if (!oldFiles.equals(newFiles)) {
                     LOGGER.info(">>> DefaultFileSystemAccess#readLocation location {} snapshot is *not* up-to-date\n    OLD: {}\n    NEW: {}", location, oldFiles, newFiles);
                 } else {
@@ -186,6 +189,7 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
                 }
             }
         }
+
         return snapshot
             .orElseGet(() -> producingSnapshots.guardByKey(location,
                 () -> virtualFileSystem.getRoot().getSnapshot(location).orElseGet(() -> snapshot(location)))
