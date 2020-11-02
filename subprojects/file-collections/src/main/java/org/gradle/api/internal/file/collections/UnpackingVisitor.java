@@ -134,7 +134,6 @@ public class UnpackingVisitor {
                 resolved = resolver.resolve(element);
                 element = null;
             }
-            LOGGER.info(">>> Resolve intrinsic files {}", resolved);
             return ImmutableSet.of(resolved);
         }
     }

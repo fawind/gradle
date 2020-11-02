@@ -62,7 +62,6 @@ public class DefaultFileCollectionSnapshotter implements FileCollectionSnapshott
         @Override
         public void visitCollection(FileCollectionInternal.Source source, Iterable<File> contents) {
             for (File file : contents) {
-                LOGGER.info(">>> DefaultFileCollectionSnapshotter#SnapshottingVisitor#visitCollection {}", file);
                 fileSystemAccess.read(file.getAbsolutePath(), roots::add);
             }
         }

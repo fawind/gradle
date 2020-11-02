@@ -167,8 +167,11 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
     }
 
     private CompleteFileSystemLocationSnapshot readLocation(String location) {
-        LOGGER.info("DefaultFileSystemAccess#readLocation location {} is present: {}", location, virtualFileSystem.getRoot().getSnapshot(location).isPresent());
-        return virtualFileSystem.getRoot().getSnapshot(location)
+        Optional<CompleteFileSystemLocationSnapshot> snapshot = virtualFileSystem.getRoot().getSnapshot(location);
+        if (location.contains("/var/conf")) {
+            LOGGER.info(">>> DefaultFileSystemAccess#readLocation location {} is present: {}", location, snapshot.isPresent());
+        }
+        return snapshot
             .orElseGet(() -> producingSnapshots.guardByKey(location,
                 () -> virtualFileSystem.getRoot().getSnapshot(location).orElseGet(() -> snapshot(location)))
             );
@@ -179,6 +182,9 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
         writeListener.locationsWritten(locations);
         virtualFileSystem.update((outerRoot, outerDiffListener) -> {
             for (String location : locations) {
+                if (location.contains("/var/conf")) {
+                    LOGGER.info(">>> DefaultFileSystemAccess#write location {}", location);
+                }
                 virtualFileSystem.update((innerRoot, diffListener) -> innerRoot.invalidate(location, diffListener));
             }
             return virtualFileSystem.getRoot();
@@ -188,6 +194,9 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
 
     @Override
     public void record(CompleteFileSystemLocationSnapshot snapshot) {
+        if (snapshot.getAbsolutePath().contains("/var/conf")) {
+            LOGGER.info(">>> DefaultFileSystemAccess#record location {}", snapshot.getAbsolutePath());
+        }
         virtualFileSystem.update((root, changeListener) -> root.store(snapshot.getAbsolutePath(), snapshot, changeListener));
     }
 

@@ -69,9 +69,6 @@ public class DirectorySnapshotter {
 
     public CompleteFileSystemLocationSnapshot snapshot(String absolutePath, @Nullable SnapshottingFilter.DirectoryWalkerPredicate predicate, final AtomicBoolean hasBeenFiltered) {
         try {
-            if (absolutePath.contains("/var/conf")) {
-                LOGGER.info(">> DirectorySnapshotter#snapshot {}", absolutePath);
-            }
             Path rootPath = Paths.get(absolutePath);
             PathVisitor visitor = new PathVisitor(predicate, hasBeenFiltered, hasher, stringInterner, defaultExcludes);
             Files.walkFileTree(rootPath, DONT_FOLLOW_SYMLINKS, Integer.MAX_VALUE, visitor);
@@ -220,7 +217,6 @@ public class DirectorySnapshotter {
 
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-            LOGGER.info(">> DirectorySnapshotter#visitFile {}", file);
             if (attrs.isSymbolicLink()) {
                 BasicFileAttributes targetAttributes = readAttributesOfSymlinkTarget(file, attrs);
                 if (targetAttributes.isDirectory()) {
@@ -262,9 +258,6 @@ public class DirectorySnapshotter {
         private void visitResolvedFile(Path file, BasicFileAttributes targetAttributes, AccessType accessType) {
             String internedName = intern(file.getFileName().toString());
             if (shouldVisit(file, internedName, false, builder.getRelativePath())) {
-                if (file.toString().contains("/var/conf")) {
-                    LOGGER.info(">>> DirectorySnapshotter#visitResolvedFile {}", file);
-                }
                 builder.visitFile(snapshotFile(file, internedName, targetAttributes, accessType));
             }
         }

@@ -65,9 +65,11 @@ public class DefaultTaskSnapshotter implements TaskSnapshotter {
             LOGGER.debug("Snapshotting property {} for {}", propertySpec, task);
             List<FileSystemSnapshot> result = fileCollectionSnapshotter.snapshot(propertySpec.getPropertyFiles());
 
-            Visitor visitor = new Visitor();
-            result.forEach(r -> r.accept(visitor));
-            LOGGER.info(">> Snapshot files for property {} for {} in snapshot: {}", propertySpec, task, visitor.visited);
+            if (propertySpec.toString().contains(".var/conf")) {
+                Visitor visitor = new Visitor();
+                result.forEach(r -> r.accept(visitor));
+                LOGGER.info(">> Snapshot files for property {} for {} in snapshot: {}", propertySpec, task, visitor.visited);
+            }
 
             builder.put(propertySpec.getPropertyName(), CompositeFileSystemSnapshot.of(result));
         }
