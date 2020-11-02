@@ -25,8 +25,10 @@ import org.gradle.internal.file.FileType;
 import org.gradle.internal.file.Stat;
 import org.gradle.internal.hash.FileHasher;
 import org.gradle.internal.hash.HashCode;
+import org.gradle.internal.snapshot.CompleteDirectorySnapshot;
 import org.gradle.internal.snapshot.CompleteFileSystemLocationSnapshot;
 import org.gradle.internal.snapshot.FileSystemSnapshot;
+import org.gradle.internal.snapshot.FileSystemSnapshotVisitor;
 import org.gradle.internal.snapshot.MissingFileSnapshot;
 import org.gradle.internal.snapshot.RegularFileSnapshot;
 import org.gradle.internal.snapshot.SnapshottingFilter;
@@ -38,7 +40,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
@@ -172,11 +176,13 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
             LOGGER.info(">>> DefaultFileSystemAccess#readLocation location {} is present: {}", location, snapshot.isPresent());
 
             if (snapshot.isPresent()) {
+                Set<String> oldFiles = CollectingVisitor.getFiles(snapshot.get());
                 CompleteFileSystemLocationSnapshot newSnapshot = snapshot(location);
-                if (!snapshot.get().isContentAndMetadataUpToDate(newSnapshot)) {
-                    LOGGER.info(">>> DefaultFileSystemAccess#readLocation location {} snapshot is *not* up-to-date", location);
+                Set<String> newFiles = CollectingVisitor.getFiles(newSnapshot);
+                if (!oldFiles.equals(newFiles)) {
+                    LOGGER.info(">>> DefaultFileSystemAccess#readLocation location {} snapshot is *not* up-to-date\n    OLD: {}\n    NEW: {}", location, oldFiles, newFiles);
                 } else {
-                    LOGGER.info(">>> DefaultFileSystemAccess#readLocation location {} snapshot is up-to-date", location);
+                    LOGGER.info(">>> DefaultFileSystemAccess#readLocation location {} snapshot is up-to-date: {}", location, oldFiles);
                 }
             }
         }
@@ -184,6 +190,30 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
             .orElseGet(() -> producingSnapshots.guardByKey(location,
                 () -> virtualFileSystem.getRoot().getSnapshot(location).orElseGet(() -> snapshot(location)))
             );
+    }
+
+    private static final class CollectingVisitor implements FileSystemSnapshotVisitor {
+        private final Set<String> files = new HashSet<>();
+
+        static Set<String> getFiles(CompleteFileSystemLocationSnapshot snapshot) {
+            CollectingVisitor visitor = new CollectingVisitor();
+            snapshot.accept(visitor);
+            return visitor.files;
+        }
+
+        @Override
+        public boolean preVisitDirectory(CompleteDirectorySnapshot directorySnapshot) {
+            return true;
+        }
+
+        @Override
+        public void visitFile(CompleteFileSystemLocationSnapshot fileSnapshot) {
+            files.add(fileSnapshot.getAbsolutePath());
+        }
+
+        @Override
+        public void postVisitDirectory(CompleteDirectorySnapshot directorySnapshot) {
+        }
     }
 
     @Override
