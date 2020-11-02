@@ -170,6 +170,15 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
         Optional<CompleteFileSystemLocationSnapshot> snapshot = virtualFileSystem.getRoot().getSnapshot(location);
         if (location.contains("/var/conf")) {
             LOGGER.info(">>> DefaultFileSystemAccess#readLocation location {} is present: {}", location, snapshot.isPresent());
+
+            if (snapshot.isPresent()) {
+                CompleteFileSystemLocationSnapshot newSnapshot = snapshot(location);
+                if (!snapshot.get().isContentAndMetadataUpToDate(newSnapshot)) {
+                    LOGGER.info(">>> DefaultFileSystemAccess#readLocation location {} snapshot is *not* up-to-date", location);
+                } else {
+                    LOGGER.info(">>> DefaultFileSystemAccess#readLocation location {} snapshot is up-to-date", location);
+                }
+            }
         }
         return snapshot
             .orElseGet(() -> producingSnapshots.guardByKey(location,
