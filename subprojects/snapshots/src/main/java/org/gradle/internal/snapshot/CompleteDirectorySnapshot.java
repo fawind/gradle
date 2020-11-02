@@ -53,7 +53,10 @@ public class CompleteDirectorySnapshot extends AbstractCompleteFileSystemLocatio
 
     @Override
     public boolean isContentAndMetadataUpToDate(CompleteFileSystemLocationSnapshot other) {
-        return other instanceof CompleteDirectorySnapshot;
+        if (other instanceof CompleteDirectorySnapshot) {
+            return getHash().equals(other.getHash());
+        }
+        return false;
     }
 
     @Override
