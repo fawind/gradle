@@ -25,8 +25,10 @@ import org.gradle.internal.file.FileType;
 import org.gradle.internal.file.Stat;
 import org.gradle.internal.hash.FileHasher;
 import org.gradle.internal.hash.HashCode;
+import org.gradle.internal.snapshot.CompleteDirectorySnapshot;
 import org.gradle.internal.snapshot.CompleteFileSystemLocationSnapshot;
 import org.gradle.internal.snapshot.FileSystemSnapshot;
+import org.gradle.internal.snapshot.FileSystemSnapshotVisitor;
 import org.gradle.internal.snapshot.MissingFileSnapshot;
 import org.gradle.internal.snapshot.RegularFileSnapshot;
 import org.gradle.internal.snapshot.SnapshottingFilter;
@@ -39,7 +41,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
@@ -187,7 +192,24 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
         Function<CompleteFileSystemLocationSnapshot, T> snapshotProcessor,
         Supplier<T> readFromDisk
     ) {
-        return virtualFileSystem.getSnapshot(location)
+        Optional<CompleteFileSystemLocationSnapshot> snapshot = virtualFileSystem.getSnapshot(location);
+
+        if (location.contains("/var/conf")) {
+            LOGGER.info(">> DefaultFileSystemAccess#readSnapshotFromLocation snapshot for location {} is present {}", location, snapshot.isPresent());
+
+            if (snapshot.isPresent()) {
+                Set<String> oldFiles = CollectingVisitor.getFiles(snapshot.get());
+
+                CompleteFileSystemLocationSnapshot newSnapshot = producingSnapshots.guardByKey(location, () -> snapshot(location, SnapshottingFilter.EMPTY));
+                Set<String> newFiles = CollectingVisitor.getFiles(newSnapshot);
+
+                if (!oldFiles.equals(newFiles)) {
+                    LOGGER.info(">> DefaultFileSystemAccess#readSnapshotFromLocation new snapshot for location {} is not equal:\n  OLD: {}\n  NEW: {}", location, oldFiles, newFiles);
+                }
+            }
+        }
+
+        return snapshot
             .map(snapshotProcessor)
             // Avoid snapshotting the same location at the same time
             .orElseGet(() -> producingSnapshots.guardByKey(location,
@@ -199,6 +221,10 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
 
     @Override
     public void write(Iterable<String> locations, Runnable action) {
+        List<String> locationsList = ImmutableList.copyOf(locations);
+        if (locationsList.stream().anyMatch(l -> l.contains("/var/conf"))) {
+            LOGGER.info(">> DefaultFileSystemAccess#write snapshot for locations {}", locationsList);
+        }
         writeListener.locationsWritten(locations);
         virtualFileSystem.invalidate(locations);
         action.run();
@@ -206,6 +232,9 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
 
     @Override
     public void record(CompleteFileSystemLocationSnapshot snapshot) {
+        if (snapshot.getAbsolutePath().contains("/var/conf")) {
+            LOGGER.info(">> DefaultFileSystemAccess#write record for {}", snapshot.getAbsolutePath());
+        }
         virtualFileSystem.store(snapshot.getAbsolutePath(), snapshot);
     }
 
@@ -231,5 +260,28 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
             directorySnapshotter = new DirectorySnapshotter(hasher, stringInterner, newDefaultExcludes, statisticsCollector);
             virtualFileSystem.invalidateAll();
         }
+    }
+
+    private static final class CollectingVisitor implements FileSystemSnapshotVisitor {
+        private final Set<String> files = new HashSet<>();
+
+        static Set<String> getFiles(FileSystemSnapshot snapshot) {
+            CollectingVisitor visitor = new CollectingVisitor();
+            snapshot.accept(visitor);
+            return visitor.files;
+        }
+
+        @Override
+        public boolean preVisitDirectory(CompleteDirectorySnapshot directorySnapshot) {
+            return true;
+        }
+
+        @Override
+        public void visitFile(CompleteFileSystemLocationSnapshot fileSnapshot) {
+            files.add(fileSnapshot.getAbsolutePath());
+        }
+
+        @Override
+        public void postVisitDirectory(CompleteDirectorySnapshot directorySnapshot) { }
     }
 }
