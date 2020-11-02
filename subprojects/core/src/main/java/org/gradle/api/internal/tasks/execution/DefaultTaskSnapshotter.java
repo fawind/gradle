@@ -50,23 +50,24 @@ public class DefaultTaskSnapshotter implements TaskSnapshotter {
     public ImmutableSortedMap<String, FileSystemSnapshot> snapshotTaskFiles(TaskInternal task, SortedSet<? extends FilePropertySpec> fileProperties) {
         ImmutableSortedMap.Builder<String, FileSystemSnapshot> builder = ImmutableSortedMap.naturalOrder();
         for (FilePropertySpec propertySpec : fileProperties) {
-            LOGGER.debug("Snapshotting property {} for {}", propertySpec, task);
-            List<FileSystemSnapshot> result = fileCollectionSnapshotter.snapshot(propertySpec.getPropertyFiles());
-
             if (propertySpec.toString().contains(".var/conf")) {
                 Path path = Paths.get(propertySpec.getPropertyFiles().getAsPath());
                 if (Files.isDirectory(path)) {
                     try {
-                        Visitor visitor = new Visitor();
-                        result.forEach(r -> r.accept(visitor));
-
                         List<Path> files = Files.list(path).collect(Collectors.toList());
-                        LOGGER.info(">> Snapshot files for property {} for {}:\nSnapshot: {}\nDisk: {}", propertySpec, task, visitor.visited, files);
+                        LOGGER.info(">> Snapshot files for property {} for {} on disk: {}", propertySpec, task, files);
                     } catch (IOException e) {
                         throw new RuntimeException("Error listing file " + path, e);
                     }
                 }
             }
+
+            LOGGER.debug("Snapshotting property {} for {}", propertySpec, task);
+            List<FileSystemSnapshot> result = fileCollectionSnapshotter.snapshot(propertySpec.getPropertyFiles());
+
+            Visitor visitor = new Visitor();
+            result.forEach(r -> r.accept(visitor));
+            LOGGER.info(">> Snapshot files for property {} for {} in snapshot: {}", propertySpec, task, visitor.visited);
 
             builder.put(propertySpec.getPropertyName(), CompositeFileSystemSnapshot.of(result));
         }

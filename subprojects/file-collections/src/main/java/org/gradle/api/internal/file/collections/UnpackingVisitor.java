@@ -31,6 +31,8 @@ import org.gradle.api.tasks.util.PatternSet;
 import org.gradle.internal.Factory;
 import org.gradle.internal.file.PathToFileResolver;
 import org.gradle.util.DeferredUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -109,6 +111,8 @@ public class UnpackingVisitor {
     }
 
     private static class SingleFileResolvingFileCollection extends AbstractOpaqueFileCollection {
+        private static final Logger LOGGER = LoggerFactory.getLogger(SingleFileResolvingFileCollection.class);
+
         private Object element;
         private final PathToFileResolver resolver;
         private File resolved;
@@ -130,6 +134,7 @@ public class UnpackingVisitor {
                 resolved = resolver.resolve(element);
                 element = null;
             }
+            LOGGER.info(">>> Resolve intrinsic files {}", resolved);
             return ImmutableSet.of(resolved);
         }
     }

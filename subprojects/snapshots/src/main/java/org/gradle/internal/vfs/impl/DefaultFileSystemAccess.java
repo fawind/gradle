@@ -167,6 +167,7 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
     }
 
     private CompleteFileSystemLocationSnapshot readLocation(String location) {
+        LOGGER.info("DefaultFileSystemAccess#readLocation location {} is present: {}", location, virtualFileSystem.getRoot().getSnapshot(location).isPresent());
         return virtualFileSystem.getRoot().getSnapshot(location)
             .orElseGet(() -> producingSnapshots.guardByKey(location,
                 () -> virtualFileSystem.getRoot().getSnapshot(location).orElseGet(() -> snapshot(location)))

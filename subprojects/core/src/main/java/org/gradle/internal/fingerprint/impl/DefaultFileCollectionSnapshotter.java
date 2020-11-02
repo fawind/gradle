@@ -28,12 +28,16 @@ import org.gradle.internal.fingerprint.FileCollectionSnapshotter;
 import org.gradle.internal.fingerprint.GenericFileTreeSnapshotter;
 import org.gradle.internal.snapshot.FileSystemSnapshot;
 import org.gradle.internal.vfs.FileSystemAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DefaultFileCollectionSnapshotter implements FileCollectionSnapshotter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultFileCollectionSnapshotter.class) ;
+
     private final FileSystemAccess fileSystemAccess;
     private final GenericFileTreeSnapshotter genericFileTreeSnapshotter;
     private final Stat stat;
@@ -58,6 +62,7 @@ public class DefaultFileCollectionSnapshotter implements FileCollectionSnapshott
         @Override
         public void visitCollection(FileCollectionInternal.Source source, Iterable<File> contents) {
             for (File file : contents) {
+                LOGGER.info(">>> DefaultFileCollectionSnapshotter#SnapshottingVisitor#visitCollection {}", file);
                 fileSystemAccess.read(file.getAbsolutePath(), roots::add);
             }
         }
