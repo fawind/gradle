@@ -194,7 +194,7 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
     ) {
         Optional<CompleteFileSystemLocationSnapshot> snapshot = virtualFileSystem.getSnapshot(location);
 
-        if (location.contains("/var/conf")) {
+        if (location.contains("/var") && location.contains("circleci/project")) {
             LOGGER.info(">> DefaultFileSystemAccess#readSnapshotFromLocation snapshot for location {} is present {}", location, snapshot.isPresent());
 
             if (snapshot.isPresent()) {
@@ -222,7 +222,7 @@ public class DefaultFileSystemAccess implements FileSystemAccess {
     @Override
     public void write(Iterable<String> locations, Runnable action) {
         List<String> locationsList = ImmutableList.copyOf(locations);
-        if (locationsList.stream().anyMatch(l -> l.contains("/var/conf"))) {
+        if (locationsList.stream().anyMatch(l -> l.contains("/var") && l.contains("circleci/project"))) {
             LOGGER.info(">> DefaultFileSystemAccess#write snapshot for locations {}", locationsList);
         }
         writeListener.locationsWritten(locations);
